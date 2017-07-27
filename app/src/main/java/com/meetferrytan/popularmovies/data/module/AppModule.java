@@ -3,7 +3,7 @@ package com.meetferrytan.popularmovies.data.module;
 import android.app.Application;
 import android.content.Context;
 
-import com.meetferrytan.popularmovies.util.ApplicationScope;
+import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
@@ -21,7 +21,7 @@ public class AppModule {
     }
 
     @Provides
-    @ApplicationScope
+    @Singleton
     Context provideContext() {
         return mApplication;
     }

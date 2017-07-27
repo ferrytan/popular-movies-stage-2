@@ -6,6 +6,7 @@ import com.meetferrytan.popularmovies.data.component.DaggerNetComponent;
 import com.meetferrytan.popularmovies.data.component.NetComponent;
 import com.meetferrytan.popularmovies.data.module.AppModule;
 import com.meetferrytan.popularmovies.data.module.NetModule;
+import com.meetferrytan.popularmovies.util.AppConstants;
 
 /**
  * Created by ferrytan on 7/4/17.
@@ -20,7 +21,7 @@ public class PopularMoviesApp extends Application {
 
         mNetComponent = DaggerNetComponent.builder()
                 .appModule(new AppModule(this))
-                .netModule(new NetModule())
+                .netModule(new NetModule(AppConstants.BASE_URL))
                 .build();
     }
 

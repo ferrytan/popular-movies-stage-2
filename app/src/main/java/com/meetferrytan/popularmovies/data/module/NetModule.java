@@ -12,12 +12,13 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.meetferrytan.popularmovies.BuildConfig;
 import com.meetferrytan.popularmovies.rest.ResponseInterceptor;
-import com.meetferrytan.popularmovies.util.AppConstants;
-import com.meetferrytan.popularmovies.util.ApplicationScope;
 
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
+
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
@@ -35,14 +36,19 @@ import retrofit2.converter.gson.GsonConverterFactory;
 @Module
 public class NetModule {
 
+    private String mBaseUrl;
+    public NetModule(String baseUrl) {
+        this.mBaseUrl = baseUrl;
+    }
+
     @Provides
-    @ApplicationScope
+    @Singleton
     SharedPreferences providesSharedPreferences(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context);
     }
 
     @Provides
-    @ApplicationScope
+    @Singleton
     Cache provideHttpCache(Context context) {
         int cacheSize = 10 * 1024 * 1024;
         Cache cache = new Cache(context.getCacheDir(), cacheSize);
@@ -50,34 +56,56 @@ public class NetModule {
     }
 
     @Provides
-    @ApplicationScope
-    Gson provideGson() {
-        GsonBuilder gsonBuilder = new GsonBuilder().registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter());
+    @Singleton
+    Gson provideGson(CollectionAdapter collectionAdapter) {
+        GsonBuilder gsonBuilder = new GsonBuilder().registerTypeHierarchyAdapter(Collection.class, collectionAdapter);
         return gsonBuilder.create();
     }
 
     @Provides
-    @ApplicationScope
-    OkHttpClient provideOkhttpClient(Cache cache) {
+    @Singleton
+    OkHttpClient provideOkhttpClient(Cache cache, ResponseInterceptor responseInterceptor, HttpLoggingInterceptor interceptor,
+                                     @Named("NETWORK_TIMEOUT") int timeOUt) {
         OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder()
-                .addInterceptor(new ResponseInterceptor())
+                .addInterceptor(responseInterceptor)
                 .cache(cache)
-                .readTimeout(20, TimeUnit.SECONDS)
-                .writeTimeout(20, TimeUnit.SECONDS);
+                .connectTimeout(timeOUt, TimeUnit.SECONDS)
+                .readTimeout(timeOUt, TimeUnit.SECONDS)
+                .writeTimeout(timeOUt, TimeUnit.SECONDS);
 
         if(BuildConfig.DEBUG) {
-            HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor();
-            httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-            clientBuilder.addInterceptor(httpLoggingInterceptor);
+            clientBuilder.addInterceptor(interceptor);
         }
         return clientBuilder.build();
     }
 
     @Provides
-    @ApplicationScope
+    @Singleton
+    @Named("NETWORK_TIMEOUT")
+    int provideNetworkTimeOut(){
+        return 20;
+    }
+
+
+    @Provides
+    @Singleton
+    ResponseInterceptor provideResponseInterceptor(){
+        return new ResponseInterceptor();
+    }
+
+    @Provides
+    @Singleton
+    HttpLoggingInterceptor provideLoggingInterceptor(){
+        HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor();
+        httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        return httpLoggingInterceptor;
+    }
+
+    @Provides
+    @Singleton
     Retrofit provideRetrofit(Gson gson, OkHttpClient okHttpClient) {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(AppConstants.BASE_URL)
+                .baseUrl(mBaseUrl)
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .client(okHttpClient)
@@ -85,7 +113,13 @@ public class NetModule {
         return retrofit;
     }
 
-    private class CollectionAdapter implements JsonSerializer<Collection<?>> {
+    @Provides
+    @Singleton
+    CollectionAdapter provideCollectionAdapter(){
+        return new CollectionAdapter();
+    }
+
+    public class CollectionAdapter implements JsonSerializer<Collection<?>> {
         @Override
         public JsonElement serialize(Collection<?> src, Type typeOfSrc, JsonSerializationContext context) {
             if (src == null || src.isEmpty()) // exclusion is made here

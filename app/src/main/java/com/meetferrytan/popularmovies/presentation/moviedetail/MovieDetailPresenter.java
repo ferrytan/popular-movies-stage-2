@@ -13,14 +13,12 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
-import retrofit2.Retrofit;
-
 import static com.meetferrytan.popularmovies.util.AppConstants.ERROR_MESSAGE_DEFAULT;
 
 public class MovieDetailPresenter extends BasePresenter<MovieDetailContract.View> implements MovieDetailContract.Presenter {
 
     @Inject
-    public MovieDetailPresenter(Retrofit retrofit) {
+    public MovieDetailPresenter() {
 
     }
 
