@@ -16,6 +16,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.meetferrytan.popularmovies.R;
 import com.meetferrytan.popularmovies.data.entity.Movie;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -29,11 +30,11 @@ public class MovieAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     public static final int VIEWTYPE_DATA = 0;
     public static final int VIEWTYPE_LOAD_MORE = 1;
     private Context mContext;
-    private List<Movie> mData;
+    private ArrayList<Movie> mData;
     private ItemClickListener mListener;
     private boolean loadMoreEnabled;
 
-    public MovieAdapter(@NonNull Context context, @NonNull List<Movie> data, @NonNull ItemClickListener listener) {
+    public MovieAdapter(@NonNull Context context, @NonNull ArrayList<Movie> data, @NonNull ItemClickListener listener) {
         this.mContext = context;
         this.mData = data;
         this.mListener = listener;
@@ -149,5 +150,9 @@ public class MovieAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     public void addItems(List<Movie> newItems){
         mData.addAll(newItems);
         notifyItemRangeChanged(mData.size(), newItems.size() + 1);
+    }
+
+    public ArrayList<Movie> getItems(){
+        return mData;
     }
 }

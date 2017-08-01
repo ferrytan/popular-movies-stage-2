@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -26,6 +27,7 @@ import com.meetferrytan.popularmovies.presentation.moviedetail.MovieDetailActivi
 import com.meetferrytan.popularmovies.presentation.settings.SettingsActivity;
 import com.meetferrytan.popularmovies.util.AppConstants;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -40,6 +42,11 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
     public static final int SORT_POPULARITY = 1;
     public static final int SPAN_COUNT_PORTRAIT = 2;
     public static final int SPAN_COUNT_LANDSCAPE = 4;
+
+    public static final String OUTSTATE_LIST_STATE = "list_state";
+    public static final String OUTSTATE_MOVIES_LIST = "movies_list";
+    public static final String OUTSTATE_HAS_MORE_DATA = "has_more";
+
     @BindView(R.id.recyclerview)
     RecyclerView recyclerview;
     @BindView(R.id.toolbar)
@@ -93,7 +100,16 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
         recyclerview.setLayoutManager(gridLayoutManager);
 
         sortState = Integer.parseInt(mSharedPreferences.getString(getString(R.string.pref_sort_key), String.valueOf(sortState)));
-        loadData();
+
+        if(savedInstanceState == null) {
+            loadData();
+        }else{
+            boolean hasMoreData = savedInstanceState.getBoolean(OUTSTATE_HAS_MORE_DATA);
+            ArrayList<Movie> movies = savedInstanceState.getParcelableArrayList(OUTSTATE_MOVIES_LIST);
+
+            showResult(movies, hasMoreData);
+            recyclerview.getLayoutManager().onRestoreInstanceState(savedInstanceState.getParcelable(OUTSTATE_LIST_STATE));
+        }
         mSharedPreferences.registerOnSharedPreferenceChangeListener(this);
     }
 
@@ -132,7 +148,7 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
     @Override
     public void showResult(List<Movie> movies, boolean hasMoreData) {
         if (mMovieAdapter == null) {
-            mMovieAdapter = new MovieAdapter(this, movies, new MovieAdapter.ItemClickListener() {
+            mMovieAdapter = new MovieAdapter(this, new ArrayList<>(movies), new MovieAdapter.ItemClickListener() {
                 @Override
                 public void onItemClick(View view, Movie movie) {
                     Intent intent = new Intent(MovieDiscoveryActivity.this, MovieDetailActivity.class);
@@ -180,6 +196,10 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        Parcelable gridInstanceState = recyclerview.getLayoutManager().onSaveInstanceState();
+        outState.putParcelable(OUTSTATE_LIST_STATE, gridInstanceState);
+
+        outState.putParcelableArrayList(OUTSTATE_MOVIES_LIST, mMovieAdapter.getItems());
     }
 
     @OnClick(R.id.txv_error)
@@ -218,5 +238,7 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
         super.onDestroy();
         mSharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
     }
+
+
 }
 
