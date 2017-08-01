@@ -1,6 +1,6 @@
 package com.meetferrytan.popularmovies.data.component;
 
-import com.meetferrytan.popularmovies.presentation.moviedetail.MovieDetailActivity;
+import com.meetferrytan.popularmovies.presentation.moviedetail.MovieDetailFragment;
 import com.meetferrytan.popularmovies.presentation.moviediscovery.MovieDiscoveryActivity;
 import com.meetferrytan.popularmovies.util.ActivityScope;
 
@@ -14,5 +14,5 @@ import dagger.Component;
 @Component(dependencies = NetComponent.class)
 public interface ActivityInjectorComponent {
     void inject(MovieDiscoveryActivity movieDiscoveryActivity);
-    void inject(MovieDetailActivity movieDetailActivity);
+    void inject(MovieDetailFragment movieDetailFragment);
 }

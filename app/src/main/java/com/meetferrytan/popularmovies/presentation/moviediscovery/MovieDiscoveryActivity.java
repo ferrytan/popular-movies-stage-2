@@ -101,9 +101,9 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
 
         sortState = Integer.parseInt(mSharedPreferences.getString(getString(R.string.pref_sort_key), String.valueOf(sortState)));
 
-        if(savedInstanceState == null) {
+        if (savedInstanceState == null) {
             loadData();
-        }else{
+        } else {
             boolean hasMoreData = savedInstanceState.getBoolean(OUTSTATE_HAS_MORE_DATA);
             ArrayList<Movie> movies = savedInstanceState.getParcelableArrayList(OUTSTATE_MOVIES_LIST);
 
@@ -198,8 +198,10 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
         super.onSaveInstanceState(outState);
         Parcelable gridInstanceState = recyclerview.getLayoutManager().onSaveInstanceState();
         outState.putParcelable(OUTSTATE_LIST_STATE, gridInstanceState);
-
-        outState.putParcelableArrayList(OUTSTATE_MOVIES_LIST, mMovieAdapter.getItems());
+        if (mMovieAdapter != null) {
+            outState.putParcelableArrayList(OUTSTATE_MOVIES_LIST, mMovieAdapter.getItems());
+            outState.putBoolean(OUTSTATE_HAS_MORE_DATA, mMovieAdapter.isLoadMoreEnabled());
+        }
     }
 
     @OnClick(R.id.txv_error)
