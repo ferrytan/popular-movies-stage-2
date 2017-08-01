@@ -104,7 +104,7 @@ public class MovieAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                     .load(movie.getPosterImageFullUrl())
                     .placeholder(R.drawable.placeholder)
                     .fitCenter()
-                    .diskCacheStrategy(DiskCacheStrategy.RESULT)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(mImgPoster);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override

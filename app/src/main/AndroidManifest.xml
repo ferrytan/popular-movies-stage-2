@@ -27,6 +27,14 @@
             android:label="@string/title_activity_movie_detail"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
+        <activity
+            android:name=".presentation.settings.SettingsActivity"
+            android:label="@string/title_activity_settings"
+            android:parentActivityName=".presentation.moviediscovery.MovieDiscoveryActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".presentation.moviediscovery.MovieDiscoveryActivity"/>
+        </activity>
     </application>
 
 </manifest>

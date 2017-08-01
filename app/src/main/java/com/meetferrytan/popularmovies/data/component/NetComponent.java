@@ -1,9 +1,10 @@
 package com.meetferrytan.popularmovies.data.component;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 
-import com.meetferrytan.popularmovies.data.module.AppModule;
-import com.meetferrytan.popularmovies.data.module.NetModule;
+import com.meetferrytan.popularmovies.data.module.ApplicationModule;
+import com.meetferrytan.popularmovies.data.module.NetworkModule;
 
 import javax.inject.Singleton;
 
@@ -15,10 +16,11 @@ import retrofit2.Retrofit;
  */
 
 @Singleton
-@Component(modules = {AppModule.class, NetModule.class})
+@Component(modules = {ApplicationModule.class, NetworkModule.class})
 public interface NetComponent {
     // downstream components need these exposed with the return type
     // method name does not really matter
     Retrofit retrofit();
     Context getApplicationContext();
+    SharedPreferences getSharedPreferences();
 }

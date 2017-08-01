@@ -25,11 +25,13 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    final SUPPORT_LIBRARY_VERSION = '25.4.0'
+    final SUPPORT_LIBRARY_VERSION = '26.0.0'
 
     compile "com.android.support:appcompat-v7:$SUPPORT_LIBRARY_VERSION"
     compile "com.android.support:design:$SUPPORT_LIBRARY_VERSION"
     compile "com.android.support:recyclerview-v7:$SUPPORT_LIBRARY_VERSION"
+    compile "com.android.support:preference-v7:$SUPPORT_LIBRARY_VERSION"
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
 
 
     final DAGGER2_LIBRARY_VERSION = '2.11'
@@ -37,11 +39,10 @@ dependencies {
     apt "com.google.dagger:dagger-compiler:$DAGGER2_LIBRARY_VERSION"
     compile "com.google.dagger:dagger:$DAGGER2_LIBRARY_VERSION"
 
-    final BUTTERKNIFE_LIBRARY_VERSION = '8.6.0'
+    final BUTTERKNIFE_LIBRARY_VERSION = '8.7.0'
     // View Binding
     compile "com.jakewharton:butterknife:$BUTTERKNIFE_LIBRARY_VERSION"
     apt "com.jakewharton:butterknife-compiler:$BUTTERKNIFE_LIBRARY_VERSION"
-
 
     final RETROFIT_LIBRARY_VERSION = '2.3.0'
     final OKHTTP3_LIBRARY_VERSION = '3.8.1'
@@ -62,6 +63,10 @@ dependencies {
 
     // Gson
     compile 'com.google.code.gson:gson:2.8.1'
+
+    // Stetho
+    compile 'com.facebook.stetho:stetho:1.5.0'
+    compile 'com.facebook.stetho:stetho-okhttp3:1.5.0'
 
     testCompile 'junit:junit:4.12'
     provided 'javax.annotation:jsr250-api:1.0'

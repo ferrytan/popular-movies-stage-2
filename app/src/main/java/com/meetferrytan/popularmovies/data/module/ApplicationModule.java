@@ -2,6 +2,8 @@ package com.meetferrytan.popularmovies.data.module;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 
 import javax.inject.Singleton;
 
@@ -13,10 +15,10 @@ import dagger.Provides;
  */
 
 @Module
-public class AppModule {
+public class ApplicationModule {
     Application mApplication;
 
-    public AppModule(Application mApplication) {
+    public ApplicationModule(Application mApplication) {
         this.mApplication = mApplication;
     }
 
@@ -24,5 +26,11 @@ public class AppModule {
     @Singleton
     Context provideContext() {
         return mApplication;
+    }
+
+    @Provides
+    @Singleton
+    SharedPreferences providesSharedPreferences(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context);
     }
 }

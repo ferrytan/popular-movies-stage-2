@@ -24,7 +24,6 @@ public class MovieDetailPresenter extends BasePresenter<MovieDetailContract.View
 
     @Override
     public void processMovieDetail(Movie movie) {
-
         try {
             SimpleDateFormat dateFormat = new SimpleDateFormat(AppConstants.DATE_FORMAT, Locale.getDefault());
             Date releaseDate = dateFormat.parse(movie.getReleaseDate());

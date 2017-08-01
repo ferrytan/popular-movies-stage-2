@@ -1,42 +1,45 @@
 package com.meetferrytan.popularmovies.presentation.moviediscovery;
 
 import android.app.ActivityOptions;
-import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.meetferrytan.popularmovies.PopularMoviesApp;
 import com.meetferrytan.popularmovies.R;
+import com.meetferrytan.popularmovies.data.component.DaggerActivityInjectorComponent;
 import com.meetferrytan.popularmovies.data.entity.Movie;
 import com.meetferrytan.popularmovies.presentation.base.BaseActivity;
 import com.meetferrytan.popularmovies.presentation.moviedetail.MovieDetailActivity;
+import com.meetferrytan.popularmovies.presentation.settings.SettingsActivity;
 import com.meetferrytan.popularmovies.util.AppConstants;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import butterknife.BindView;
 import butterknife.OnClick;
 
-public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter, MovieDiscoveryComponent>
-        implements MovieDiscoveryContract.View {
+public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter>
+        implements MovieDiscoveryContract.View, SharedPreferences.OnSharedPreferenceChangeListener {
 
     public static final int SORT_RATING = 0;
     public static final int SORT_POPULARITY = 1;
-    public static final int SPAN_COUNT = 2;
+    public static final int SPAN_COUNT_PORTRAIT = 2;
+    public static final int SPAN_COUNT_LANDSCAPE = 4;
     @BindView(R.id.recyclerview)
     RecyclerView recyclerview;
     @BindView(R.id.toolbar)
@@ -47,17 +50,23 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
     TextView mTxvError;
 
     private int sortState;
+
     private MovieAdapter mMovieAdapter;
 
+
+    @Inject
+    SharedPreferences mSharedPreferences;
+
     @Override
-    protected void createComponent() {
-        mComponent = DaggerMovieDiscoveryComponent.builder()
+    protected void initComponent() {
+        mComponent = DaggerActivityInjectorComponent.builder()
                 .netComponent(PopularMoviesApp.getNetComponent())
                 .build();
+        mComponent.inject(this);
     }
 
     @Override
-    public int createLayout() {
+    public int setLayoutRes() {
         return R.layout.activity_movie_discovery;
     }
 
@@ -66,7 +75,10 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle(R.string.title_activity_movie_discovery);
 
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, SPAN_COUNT);
+        final int spanCount = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT ?
+                SPAN_COUNT_PORTRAIT : SPAN_COUNT_LANDSCAPE;
+
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, spanCount);
         gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
@@ -74,16 +86,15 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
                 if (movieAdapter != null && movieAdapter.getItemViewType(position) == MovieAdapter.VIEWTYPE_DATA) {
                     return 1;
                 } else {
-                    return 2;
+                    return spanCount;
                 }
             }
         });
         recyclerview.setLayoutManager(gridLayoutManager);
 
-        if(savedInstanceState!=null){
-            sortState = savedInstanceState.getInt("test");
-        }
+        sortState = Integer.parseInt(mSharedPreferences.getString(getString(R.string.pref_sort_key), String.valueOf(sortState)));
         loadData();
+        mSharedPreferences.registerOnSharedPreferenceChangeListener(this);
     }
 
     /**
@@ -92,9 +103,9 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
     @Override
     public void showError(int errorCode, String message) {
         Log.d(getClass().getSimpleName(), "showError() called with: errorCode = [" + errorCode + "], message = [" + message + "]");
-        if(mMovieAdapter == null){
+        if (mMovieAdapter == null) {
             mTxvError.setVisibility(View.VISIBLE);
-        }else{
+        } else {
             mTxvError.setVisibility(View.GONE);
         }
     }
@@ -105,9 +116,9 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
     @Override
     public void showLoading(boolean show) {
         mTxvError.setVisibility(View.GONE);
-        if(show){
+        if (show) {
             mProgressBar.setVisibility(View.VISIBLE);
-        }else{
+        } else {
             mProgressBar.setVisibility(View.GONE);
         }
     }
@@ -130,8 +141,7 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
                         ActivityOptions options = ActivityOptions.
                                 makeSceneTransitionAnimation(MovieDiscoveryActivity.this, view, getString(R.string.activity_image_trans));
                         startActivity(intent, options.toBundle());
-                    }
-                    else {
+                    } else {
                         startActivity(intent);
                     }
                 }
@@ -150,35 +160,8 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_home, menu);
-
-        MenuItem item = menu.findItem(R.id.sort_by);
-        Spinner spinner = (Spinner) MenuItemCompat.getActionView(item);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int selectedPosition, long l) {
-                if (sortState != selectedPosition) {
-                    sortState = selectedPosition;
-                    mMovieAdapter = null;
-                    recyclerview.setAdapter(null);
-                    mPresenter.reset();
-                    loadData();
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
-        spinner.setSelection(sortState);
-
-        Context wrappedContext = new android.view.ContextThemeWrapper(this, R.style.ToolbarSpinnerTheme);
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(wrappedContext,
-                R.array.menu_sort_array, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        spinner.setAdapter(adapter);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_home, menu);
         return true;
     }
 
@@ -186,8 +169,9 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemId = item.getItemId();
         switch (itemId) {
-            case R.id.sort_by:
-                // do nothing, already handled in Spinner onItemSelectedListener
+            case R.id.settings:
+                Intent startSettingsActivity = new Intent(this, SettingsActivity.class);
+                startActivity(startSettingsActivity);
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -196,24 +180,43 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        // TODO save list data, position, presenter's paging parameter
-        outState.putInt("test", sortState);
     }
 
     @OnClick(R.id.txv_error)
-    public void retryLoadingData(){
+    public void retryLoadingData() {
         loadData();
     }
 
     public void loadData() {
         switch (sortState) {
             case SORT_RATING:
-                mPresenter.loadTopRatedMovies();
+                getPresenter().loadTopRatedMovies();
                 break;
             case SORT_POPULARITY:
-                mPresenter.loadPopularMovies();
+                getPresenter().loadPopularMovies();
                 break;
         }
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals(getString(R.string.pref_sort_key))) {
+
+            int newSortState = Integer.parseInt(sharedPreferences.getString(key, String.valueOf(sortState)));
+            if (newSortState != sortState) {
+                sortState = newSortState;
+                mMovieAdapter = null;
+                recyclerview.setAdapter(null);
+                getPresenter().reset();
+                loadData();
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mSharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
     }
 }
 

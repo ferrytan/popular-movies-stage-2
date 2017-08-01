@@ -16,8 +16,4 @@ public interface BaseContract {
         void attachView(V mvpView);
         void detachView();
     }
-
-    public interface Component<P extends Presenter>{
-        P presenter();
-    }
 }

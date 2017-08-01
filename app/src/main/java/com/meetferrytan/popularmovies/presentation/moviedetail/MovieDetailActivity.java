@@ -10,13 +10,14 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.meetferrytan.popularmovies.PopularMoviesApp;
 import com.meetferrytan.popularmovies.R;
+import com.meetferrytan.popularmovies.data.component.DaggerActivityInjectorComponent;
 import com.meetferrytan.popularmovies.data.entity.Movie;
 import com.meetferrytan.popularmovies.presentation.base.BaseActivity;
 import com.meetferrytan.popularmovies.util.AppConstants;
 
 import butterknife.BindView;
 
-public class MovieDetailActivity extends  BaseActivity<MovieDetailPresenter, MovieDetailComponent>
+public class MovieDetailActivity extends  BaseActivity<MovieDetailPresenter>
         implements MovieDetailContract.View {
 
     @BindView(R.id.toolbar)
@@ -35,14 +36,15 @@ public class MovieDetailActivity extends  BaseActivity<MovieDetailPresenter, Mov
     TextView txvSynopsis;
 
     @Override
-    protected void createComponent() {
-        mComponent = DaggerMovieDetailComponent.builder()
+    protected void initComponent() {
+        mComponent = DaggerActivityInjectorComponent.builder()
                 .netComponent(PopularMoviesApp.getNetComponent())
                 .build();
+        mComponent.inject(this);
     }
 
     @Override
-    public int createLayout() {
+    public int setLayoutRes() {
         return R.layout.activity_movie_detail;
     }
 
@@ -53,7 +55,7 @@ public class MovieDetailActivity extends  BaseActivity<MovieDetailPresenter, Mov
         getSupportActionBar().setTitle(R.string.title_activity_movie_detail);
         Movie movie = getIntent().getParcelableExtra(AppConstants.BUNDLE_MOVIE);
 
-        mPresenter.processMovieDetail(movie);
+        getPresenter().processMovieDetail(movie);
     }
 
     @Override
@@ -75,7 +77,7 @@ public class MovieDetailActivity extends  BaseActivity<MovieDetailPresenter, Mov
                 .load(posterImage)
                 .placeholder(R.drawable.placeholder)
                 .fitCenter()
-                .diskCacheStrategy(DiskCacheStrategy.RESULT)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .into(image);
 
         txvYear.setText(year);

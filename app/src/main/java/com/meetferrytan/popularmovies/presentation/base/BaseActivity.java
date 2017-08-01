@@ -5,33 +5,41 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 
+import com.meetferrytan.popularmovies.data.component.ActivityInjectorComponent;
+
+import javax.inject.Inject;
+
 import butterknife.ButterKnife;
 
-public abstract class BaseActivity<P extends BaseContract.Presenter, C extends BaseContract.Component<P>>
+public abstract class BaseActivity<P extends BaseContract.Presenter>
         extends AppCompatActivity implements BaseContract.View {
-    protected P mPresenter;
-    protected C mComponent;
+    private P mPresenter;
+    protected ActivityInjectorComponent mComponent;
 
-    protected abstract void createComponent();
+    protected abstract void initComponent();
 
-    protected P createPresenter() {
-        return mComponent.presenter();
-    }
-
-    public abstract int createLayout();
+    public abstract int setLayoutRes();
 
     public abstract void startingUpActivity(Bundle savedInstanceState);
+
+    protected P getPresenter() {
+        return mPresenter;
+    }
+
+    @Inject
+    public void setPresenter(P presenter){
+        this.mPresenter = presenter;
+        mPresenter.attachView(this);
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // set content via create layout implement
-        setContentView(createLayout());
+        setContentView(setLayoutRes());
         ButterKnife.bind(this);
 
-        createComponent();
-        mPresenter = createPresenter();
-        mPresenter.attachView(this);
+        initComponent();
         // init action
         startingUpActivity(savedInstanceState);
     }

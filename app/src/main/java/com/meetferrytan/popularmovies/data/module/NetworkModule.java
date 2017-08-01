@@ -1,9 +1,8 @@
 package com.meetferrytan.popularmovies.data.module;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 
+import com.facebook.stetho.okhttp3.StethoInterceptor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -34,17 +33,11 @@ import retrofit2.converter.gson.GsonConverterFactory;
  */
 
 @Module
-public class NetModule {
+public class NetworkModule {
 
     private String mBaseUrl;
-    public NetModule(String baseUrl) {
+    public NetworkModule(String baseUrl) {
         this.mBaseUrl = baseUrl;
-    }
-
-    @Provides
-    @Singleton
-    SharedPreferences providesSharedPreferences(Context context) {
-        return PreferenceManager.getDefaultSharedPreferences(context);
     }
 
     @Provides
@@ -65,9 +58,10 @@ public class NetModule {
     @Provides
     @Singleton
     OkHttpClient provideOkhttpClient(Cache cache, ResponseInterceptor responseInterceptor, HttpLoggingInterceptor interceptor,
-                                     @Named("NETWORK_TIMEOUT") int timeOUt) {
+                                     StethoInterceptor stethoInterceptor, @Named("NETWORK_TIMEOUT") int timeOUt) {
         OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder()
                 .addInterceptor(responseInterceptor)
+                .addNetworkInterceptor(stethoInterceptor)
                 .cache(cache)
                 .connectTimeout(timeOUt, TimeUnit.SECONDS)
                 .readTimeout(timeOUt, TimeUnit.SECONDS)
@@ -91,6 +85,12 @@ public class NetModule {
     @Singleton
     ResponseInterceptor provideResponseInterceptor(){
         return new ResponseInterceptor();
+    }
+
+    @Provides
+    @Singleton
+    StethoInterceptor provideStethoInterceptor(){
+        return new StethoInterceptor();
     }
 
     @Provides

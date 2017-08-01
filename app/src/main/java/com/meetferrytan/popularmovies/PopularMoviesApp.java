@@ -2,10 +2,11 @@ package com.meetferrytan.popularmovies;
 
 import android.app.Application;
 
+import com.facebook.stetho.Stetho;
 import com.meetferrytan.popularmovies.data.component.DaggerNetComponent;
 import com.meetferrytan.popularmovies.data.component.NetComponent;
-import com.meetferrytan.popularmovies.data.module.AppModule;
-import com.meetferrytan.popularmovies.data.module.NetModule;
+import com.meetferrytan.popularmovies.data.module.ApplicationModule;
+import com.meetferrytan.popularmovies.data.module.NetworkModule;
 import com.meetferrytan.popularmovies.util.AppConstants;
 
 /**
@@ -20,9 +21,10 @@ public class PopularMoviesApp extends Application {
         super.onCreate();
 
         mNetComponent = DaggerNetComponent.builder()
-                .appModule(new AppModule(this))
-                .netModule(new NetModule(AppConstants.BASE_URL))
+                .applicationModule(new ApplicationModule(this))
+                .networkModule(new NetworkModule(AppConstants.BASE_URL))
                 .build();
+        Stetho.initializeWithDefaults(this);
     }
 
     public static NetComponent getNetComponent() {
