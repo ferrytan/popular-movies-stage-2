@@ -24,6 +24,7 @@ import com.meetferrytan.popularmovies.data.component.DaggerActivityInjectorCompo
 import com.meetferrytan.popularmovies.data.entity.Movie;
 import com.meetferrytan.popularmovies.presentation.base.BaseActivity;
 import com.meetferrytan.popularmovies.presentation.moviedetail.MovieDetailActivity;
+import com.meetferrytan.popularmovies.presentation.moviedetail.MovieDetailFragment;
 import com.meetferrytan.popularmovies.presentation.settings.SettingsActivity;
 import com.meetferrytan.popularmovies.util.AppConstants;
 
@@ -57,9 +58,9 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
     TextView mTxvError;
 
     private int sortState;
+    private boolean isTwoPane;
 
     private MovieAdapter mMovieAdapter;
-
 
     @Inject
     SharedPreferences mSharedPreferences;
@@ -82,7 +83,9 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle(R.string.title_activity_movie_discovery);
 
-        final int spanCount = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT ?
+        isTwoPane = getResources().getBoolean(R.bool.two_pane);
+
+        final int spanCount = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT || isTwoPane ?
                 SPAN_COUNT_PORTRAIT : SPAN_COUNT_LANDSCAPE;
 
         GridLayoutManager gridLayoutManager = new GridLayoutManager(this, spanCount);
@@ -99,8 +102,8 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
         });
         recyclerview.setLayoutManager(gridLayoutManager);
 
-        sortState = Integer.parseInt(mSharedPreferences.getString(getString(R.string.pref_sort_key), String.valueOf(sortState)));
 
+        sortState = Integer.parseInt(mSharedPreferences.getString(getString(R.string.pref_sort_key), String.valueOf(sortState)));
         if (savedInstanceState == null) {
             loadData();
         } else {
@@ -153,12 +156,16 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
                 public void onItemClick(View view, Movie movie) {
                     Intent intent = new Intent(MovieDiscoveryActivity.this, MovieDetailActivity.class);
                     intent.putExtra(AppConstants.BUNDLE_MOVIE, movie);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        ActivityOptions options = ActivityOptions.
-                                makeSceneTransitionAnimation(MovieDiscoveryActivity.this, view, getString(R.string.activity_image_trans));
-                        startActivity(intent, options.toBundle());
-                    } else {
-                        startActivity(intent);
+                    if(isTwoPane){
+                        showDetail(movie);
+                    }else {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            ActivityOptions options = ActivityOptions.
+                                    makeSceneTransitionAnimation(MovieDiscoveryActivity.this, view, getString(R.string.activity_image_trans));
+                            startActivity(intent, options.toBundle());
+                        } else {
+                            startActivity(intent);
+                        }
                     }
                 }
 
@@ -168,10 +175,22 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
                 }
             });
             recyclerview.setAdapter(mMovieAdapter);
+
+            if(isTwoPane){
+                // load first item on the list to the detail pane
+                showDetail(mMovieAdapter.getItem(0));
+            }
         } else {
             mMovieAdapter.addItems(movies);
         }
         mMovieAdapter.setLoadMoreEnabled(hasMoreData);
+    }
+
+    private void showDetail(Movie movie) {
+        MovieDetailFragment movieDetailFragment = MovieDetailFragment.newInstance(movie);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, movieDetailFragment)
+                .commit();
     }
 
     @Override

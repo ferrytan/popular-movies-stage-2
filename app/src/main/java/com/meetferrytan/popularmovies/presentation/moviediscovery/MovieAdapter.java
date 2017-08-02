@@ -155,4 +155,10 @@ public class MovieAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     public ArrayList<Movie> getItems(){
         return mData;
     }
+
+    public Movie getItem(int position){
+        if(position>=0 && position<mData.size())
+            return mData.get(position);
+        return null;
+    }
 }
