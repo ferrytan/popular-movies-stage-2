@@ -1,5 +1,6 @@
 package com.meetferrytan.popularmovies.presentation.moviediscovery;
 
+import com.meetferrytan.popularmovies.data.entity.Movie;
 import com.meetferrytan.popularmovies.presentation.base.BasePresenter;
 import com.meetferrytan.popularmovies.presentation.moviediscovery.repository.MovieDiscoveryAPI;
 import com.meetferrytan.popularmovies.rest.ResponseCollection;
@@ -15,6 +16,8 @@ import io.reactivex.schedulers.Schedulers;
 import retrofit2.Retrofit;
 
 public class MovieDiscoveryPresenter extends BasePresenter<MovieDiscoveryContract.View> implements MovieDiscoveryContract.Presenter {
+    public static final int PROCESS_LOAD_POPULAR_MOVIES = 0;
+    public static final int PROCESS_LOAD_TOP_RATED_MOVIES = 1;
     private MovieDiscoveryAPI mAPI;
     private int mPage;
 
@@ -26,24 +29,23 @@ public class MovieDiscoveryPresenter extends BasePresenter<MovieDiscoveryContrac
 
     @Override
     public void loadPopularMovies() {
-        getView().showLoading(true);
+        getView().showLoading(PROCESS_LOAD_POPULAR_MOVIES, true);
         mPage++;
 
         Disposable disposable = mAPI.getPopularMovies(AppConstants.TMDB_API_KEY, mPage)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<ResponseCollection>() {
+                .subscribe(new Consumer<ResponseCollection<Movie>>() {
                     @Override
-                    public void accept(@NonNull ResponseCollection responseCollection) throws Exception {
+                    public void accept(@NonNull ResponseCollection<Movie> responseCollection) throws Exception {
                         boolean hasMoreData = mPage<responseCollection.getTotalPages();
-                        getView().showLoading(false);
+                        getView().showLoading(PROCESS_LOAD_POPULAR_MOVIES, false);
                         getView().showResult(responseCollection.getResults(), hasMoreData);
                     }
                 }, new Consumer<Throwable>() {
                     @Override
                     public void accept(@NonNull Throwable throwable) throws Exception {
-                        getView().showLoading(false);
-                        processError(throwable);
+                        processError(PROCESS_LOAD_POPULAR_MOVIES, throwable);
                     }
                 });
         addDisposable(disposable);
@@ -51,23 +53,22 @@ public class MovieDiscoveryPresenter extends BasePresenter<MovieDiscoveryContrac
 
     @Override
     public void loadTopRatedMovies() {
-        getView().showLoading(true);
+        getView().showLoading(PROCESS_LOAD_TOP_RATED_MOVIES, true);
         mPage++;
         Disposable disposable = mAPI.getTopRatedMovies(AppConstants.TMDB_API_KEY, mPage)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<ResponseCollection>() {
+                .subscribe(new Consumer<ResponseCollection<Movie>>() {
                     @Override
-                    public void accept(@NonNull ResponseCollection responseCollection) throws Exception {
+                    public void accept(@NonNull ResponseCollection<Movie> responseCollection) throws Exception {
                         boolean hasMoreData = mPage<responseCollection.getTotalPages();
-                        getView().showLoading(false);
+                        getView().showLoading(PROCESS_LOAD_POPULAR_MOVIES, false);
                         getView().showResult(responseCollection.getResults(), hasMoreData);
                     }
                 }, new Consumer<Throwable>() {
                     @Override
                     public void accept(@NonNull Throwable throwable) throws Exception {
-                        getView().showLoading(false);
-                        processError(throwable);
+                        processError(PROCESS_LOAD_TOP_RATED_MOVIES, throwable);
                     }
                 });
         addDisposable(disposable);

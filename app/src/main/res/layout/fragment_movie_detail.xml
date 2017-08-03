@@ -35,7 +35,7 @@
             android:adjustViewBounds="true"
             android:scaleType="centerCrop"
             android:layout_below="@id/txv_title"
-            android:layout_marginTop="@dimen/padding_half"
+            android:layout_marginTop="@dimen/padding"
             android:src="@drawable/placeholder"
             android:layout_marginLeft="@dimen/padding"
             android:layout_marginRight="@dimen/padding_2x"
@@ -74,6 +74,45 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/image"
             android:layout_marginTop="@dimen/padding_quarter"
-            android:padding="@dimen/padding_half"/>
+            android:padding="@dimen/padding"/>
+
+        <TextView
+            android:id="@+id/txv_trailer_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/Base.TextAppearance.AppCompat.Display1"
+            android:textColor="@color/colorPrimary"
+            android:text="@string/label_trailers"
+            android:layout_below="@id/txv_synopsis"
+            android:layout_marginLeft="@dimen/padding"
+            android:layout_marginTop="@dimen/padding"/>
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rv_trailers"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            app:layoutManager="LinearLayoutManager"
+            android:orientation="horizontal"
+            android:background="@color/colorPrimary"
+            android:layout_below="@id/txv_trailer_label"/>
+
+        <TextView
+            android:id="@+id/txv_review_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/Base.TextAppearance.AppCompat.Display1"
+            android:textColor="@color/colorPrimary"
+            android:text="@string/label_reviews"
+            android:layout_below="@id/rv_trailers"
+            android:layout_marginLeft="@dimen/padding"
+            android:layout_marginTop="@dimen/padding"/>
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rv_reviews"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/txv_review_label"
+            app:layoutManager="LinearLayoutManager"
+            android:orientation="vertical"/>
     </RelativeLayout>
 </ScrollView>

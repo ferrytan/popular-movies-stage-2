@@ -1,5 +1,6 @@
 package com.meetferrytan.popularmovies.presentation.moviediscovery.repository;
 
+import com.meetferrytan.popularmovies.data.entity.Movie;
 import com.meetferrytan.popularmovies.rest.ResponseCollection;
 
 import io.reactivex.Observable;
@@ -13,8 +14,8 @@ import retrofit2.http.Query;
 public interface MovieDiscoveryAPI {
 
     @GET("movie/popular")
-    Observable<ResponseCollection> getPopularMovies(@Query("api_key") String apiKey, @Query("page") int page);
+    Observable<ResponseCollection<Movie>> getPopularMovies(@Query("api_key") String apiKey, @Query("page") int page);
 
     @GET("movie/top_rated")
-    Observable<ResponseCollection> getTopRatedMovies(@Query("api_key") String apiKey, @Query("page") int page);
+    Observable<ResponseCollection<Movie>> getTopRatedMovies(@Query("api_key") String apiKey, @Query("page") int page);
 }

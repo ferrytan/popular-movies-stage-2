@@ -7,8 +7,8 @@ package com.meetferrytan.popularmovies.presentation.base;
 public interface BaseContract {
 
     public interface View{
-        void showError(int errorCode, String message);
-        void showLoading(boolean show);
+        void showError(int processId, int errorCode, String message);
+        void showLoading(int processId, boolean show);
     }
 
     public interface Presenter<V extends View>{

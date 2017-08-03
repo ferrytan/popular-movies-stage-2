@@ -12,6 +12,7 @@ import com.meetferrytan.popularmovies.data.component.ActivityInjectorComponent;
 import javax.inject.Inject;
 
 import butterknife.ButterKnife;
+import butterknife.Unbinder;
 
 /**
  * Created by ferrytan on 8/2/17.
@@ -21,6 +22,7 @@ public abstract class BaseFragment<P extends BaseContract.Presenter>
         extends Fragment implements BaseContract.View {
     private P mPresenter;
     protected ActivityInjectorComponent mComponent;
+    Unbinder unbinder;
 
     protected abstract void initComponent();
 
@@ -45,7 +47,7 @@ public abstract class BaseFragment<P extends BaseContract.Presenter>
         View view = createLayout(inflater, container, savedInstanceState);
 
         // inject butter knife to init view
-        ButterKnife.bind(this, view);
+        unbinder = ButterKnife.bind(this, view);
 
         initComponent();
         // call init action
@@ -56,6 +58,7 @@ public abstract class BaseFragment<P extends BaseContract.Presenter>
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        unbinder.unbind();
         mPresenter.detachView();
     }
 }

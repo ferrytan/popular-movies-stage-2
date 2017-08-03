@@ -1,7 +1,10 @@
 package com.meetferrytan.popularmovies.presentation.moviedetail;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +18,11 @@ import com.meetferrytan.popularmovies.PopularMoviesApp;
 import com.meetferrytan.popularmovies.R;
 import com.meetferrytan.popularmovies.data.component.DaggerActivityInjectorComponent;
 import com.meetferrytan.popularmovies.data.entity.Movie;
+import com.meetferrytan.popularmovies.data.entity.Review;
+import com.meetferrytan.popularmovies.data.entity.Trailer;
 import com.meetferrytan.popularmovies.presentation.base.BaseFragment;
+
+import java.util.List;
 
 import butterknife.BindView;
 
@@ -34,11 +41,15 @@ public class MovieDetailFragment extends BaseFragment<MovieDetailPresenter>
     TextView txvRating;
     @BindView(R.id.txv_synopsis)
     TextView txvSynopsis;
+    @BindView(R.id.rv_trailers)
+    RecyclerView rvTrailers;
+    @BindView(R.id.rv_reviews)
+    RecyclerView rvReviews;
 
     private Movie mMovie;
 
     public static MovieDetailFragment newInstance(Movie movie) {
-        
+
         Bundle args = new Bundle();
         args.putParcelable(ARG_MOVIE, movie);
         MovieDetailFragment fragment = new MovieDetailFragment();
@@ -49,7 +60,7 @@ public class MovieDetailFragment extends BaseFragment<MovieDetailPresenter>
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(getArguments()!=null) {
+        if (getArguments() != null) {
             mMovie = getArguments().getParcelable(ARG_MOVIE);
         }
     }
@@ -69,22 +80,23 @@ public class MovieDetailFragment extends BaseFragment<MovieDetailPresenter>
 
     @Override
     public void startingUpFragment(View view, Bundle savedInstanceState) {
-        getPresenter().processMovieDetail(mMovie);
+        updateMovieData(mMovie);
     }
 
     @Override
-    public void showError(int errorCode, String message) {
+    public void showError(int processId, int errorCode, String message) {
         // nothing to do
+        showLoading(processId, false);
         Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
-    public void showLoading(boolean show) {
+    public void showLoading(int processId, boolean show) {
         // nothing to do
     }
 
     @Override
-    public void displayMovieDetail(String title, String posterImage, String year, String monthDay, String rating, String synopsys) {
+    public void displayMovieDetail(String id, String title, String posterImage, String year, String monthDay, String rating, String synopsys) {
         txvTitle.setText(title);
 
         Glide.with(this)
@@ -98,5 +110,33 @@ public class MovieDetailFragment extends BaseFragment<MovieDetailPresenter>
         txvMonthDay.setText(monthDay);
         txvRating.setText(rating);
         txvSynopsis.setText(synopsys);
+
+        getPresenter().getTrailers(id);
+        getPresenter().getReviews(id);
+    }
+
+    @Override
+    public void displayTrailers(List<Trailer> trailers) {
+        TrailerAdapter trailerAdapter = new TrailerAdapter(getActivity(), trailers, new TrailerAdapter.TrailerClickListener() {
+            @Override
+            public void onTrailerItemClicked(View view, Trailer trailer) {
+                Intent i = new Intent(Intent.ACTION_VIEW);
+                i.setData(Uri.parse(trailer.getYoutubeVideoUrl()));
+                startActivity(i);
+            }
+        });
+
+        rvTrailers.setAdapter(trailerAdapter);
+    }
+
+    @Override
+    public void displayReviews(List<Review> reviews) {
+        ReviewAdapter reviewAdapter = new ReviewAdapter(getActivity(), reviews);
+        rvReviews.setAdapter(reviewAdapter);
+    }
+
+    public void updateMovieData(Movie movie) {
+        mMovie = movie;
+        getPresenter().distributeMovieDetail(mMovie);
     }
 }

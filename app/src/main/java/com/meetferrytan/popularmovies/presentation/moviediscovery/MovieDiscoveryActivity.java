@@ -39,6 +39,7 @@ import butterknife.OnClick;
 public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter>
         implements MovieDiscoveryContract.View, SharedPreferences.OnSharedPreferenceChangeListener {
 
+    public static final String FRAGMENT_TAG_DETAIL = "detail_fragment";
     public static final int SORT_RATING = 0;
     public static final int SORT_POPULARITY = 1;
     public static final int SPAN_COUNT_PORTRAIT = 2;
@@ -120,7 +121,8 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
      * show error view
      */
     @Override
-    public void showError(int errorCode, String message) {
+    public void showError(int processId, int errorCode, String message) {
+        showLoading(processId, false);
         Log.d(getClass().getSimpleName(), "showError() called with: errorCode = [" + errorCode + "], message = [" + message + "]");
         if (mMovieAdapter == null) {
             mTxvError.setVisibility(View.VISIBLE);
@@ -133,7 +135,7 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
      * show loading view
      */
     @Override
-    public void showLoading(boolean show) {
+    public void showLoading(int processId, boolean show) {
         mTxvError.setVisibility(View.GONE);
         if (show) {
             mProgressBar.setVisibility(View.VISIBLE);
@@ -156,9 +158,9 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
                 public void onItemClick(View view, Movie movie) {
                     Intent intent = new Intent(MovieDiscoveryActivity.this, MovieDetailActivity.class);
                     intent.putExtra(AppConstants.BUNDLE_MOVIE, movie);
-                    if(isTwoPane){
+                    if (isTwoPane) {
                         showDetail(movie);
-                    }else {
+                    } else {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                             ActivityOptions options = ActivityOptions.
                                     makeSceneTransitionAnimation(MovieDiscoveryActivity.this, view, getString(R.string.activity_image_trans));
@@ -176,7 +178,7 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
             });
             recyclerview.setAdapter(mMovieAdapter);
 
-            if(isTwoPane){
+            if (isTwoPane) {
                 // load first item on the list to the detail pane
                 showDetail(mMovieAdapter.getItem(0));
             }
@@ -186,11 +188,25 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
         mMovieAdapter.setLoadMoreEnabled(hasMoreData);
     }
 
-    private void showDetail(Movie movie) {
+    private void addDetailFragment(Movie movie) {
         MovieDetailFragment movieDetailFragment = MovieDetailFragment.newInstance(movie);
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, movieDetailFragment)
+                .replace(R.id.fragment_container, movieDetailFragment, FRAGMENT_TAG_DETAIL)
                 .commit();
+    }
+
+    private void showDetail(Movie movie) {
+        if (getSupportFragmentManager().findFragmentByTag(FRAGMENT_TAG_DETAIL) != null) {
+            MovieDetailFragment movieDetailFragment = (MovieDetailFragment) getSupportFragmentManager().findFragmentByTag(FRAGMENT_TAG_DETAIL);
+
+            if (movieDetailFragment.isInLayout())
+                movieDetailFragment.updateMovieData(movie);
+            else
+                addDetailFragment(movie);
+        } else {
+            addDetailFragment(movie);
+        }
+
     }
 
     @Override
@@ -242,7 +258,6 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals(getString(R.string.pref_sort_key))) {
-
             int newSortState = Integer.parseInt(sharedPreferences.getString(key, String.valueOf(sortState)));
             if (newSortState != sortState) {
                 sortState = newSortState;

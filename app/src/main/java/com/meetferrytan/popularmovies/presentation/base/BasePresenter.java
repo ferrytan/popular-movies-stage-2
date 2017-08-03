@@ -38,15 +38,15 @@ public class BasePresenter<V extends BaseContract.View> implements BaseContract.
         this.mCompositeDisposable.add(disposable);
     }
 
-    public void processError(Throwable throwable){
+    public void processError(int processId, Throwable throwable){
         throwable.printStackTrace();
         if (throwable instanceof TmdbApiException) {
             TmdbApiException tmdbApiException = ((TmdbApiException)throwable);
             int errorCode = tmdbApiException.getErrorCode();
             String message = tmdbApiException.getErrorMessage();
-            getView().showError(errorCode, message);
+            getView().showError(processId, errorCode, message);
         }else{
-            getView().showError(-1, ERROR_MESSAGE_DEFAULT);
+            getView().showError(processId, -1, ERROR_MESSAGE_DEFAULT);
         }
     }
 }

@@ -1,7 +1,6 @@
 package com.meetferrytan.popularmovies.rest;
 
 import com.google.gson.annotations.SerializedName;
-import com.meetferrytan.popularmovies.data.entity.Movie;
 
 import java.util.List;
 
@@ -19,7 +18,7 @@ import java.util.List;
  }
  */
 
-public class ResponseCollection {
+public class ResponseCollection<T> {
     @SerializedName("page")
     private int mPage;
     @SerializedName("total_results")
@@ -27,7 +26,7 @@ public class ResponseCollection {
     @SerializedName("total_pages")
     private int mTotalPages;
     @SerializedName("results")
-    private List<Movie> mResults;
+    private List<T> mResults;
 
     public ResponseCollection() {
     }
@@ -56,11 +55,11 @@ public class ResponseCollection {
         mTotalPages = totalPages;
     }
 
-    public List<Movie> getResults() {
+    public List<T> getResults() {
         return mResults;
     }
 
-    public void setResults(List<Movie> results) {
+    public void setResults(List<T> results) {
         mResults = results;
     }
 }

@@ -17,6 +17,9 @@
     <string name="label_rating" translatable="false">%.02f/10</string>
     <string name="activity_image_trans" translatable="false">activity_image_trans</string>
     <string name="label_retry">Tap to retry</string>
+    <string name="label_trailers">Trailers</string>
+    <string name="label_reviews">Reviews</string>
+    <string name="label_review_base" translatable="false">\"%1$s\"</string>
 
     <!--Preference-->
     <!--Menu-->
