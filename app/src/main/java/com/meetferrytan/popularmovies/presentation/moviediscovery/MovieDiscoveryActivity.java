@@ -60,6 +60,7 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
 
     private int sortState;
     private boolean isTwoPane;
+    private boolean showFavorite;
 
     private MovieAdapter mMovieAdapter;
 
@@ -217,12 +218,25 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem menuFavorite = menu.getItem(0);
+        menuFavorite.setChecked(showFavorite);
+        menuFavorite.setIcon(showFavorite?R.drawable.ic_favorite_enabled:R.drawable.ic_favorite_disabled);
+        return super.onPrepareOptionsMenu(menu);
+
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemId = item.getItemId();
         switch (itemId) {
             case R.id.settings:
                 Intent startSettingsActivity = new Intent(this, SettingsActivity.class);
                 startActivity(startSettingsActivity);
+                return true;
+            case R.id.favorite:
+                showFavorite = !showFavorite;
+                invalidateOptionsMenu();
                 return true;
         }
         return super.onOptionsItemSelected(item);

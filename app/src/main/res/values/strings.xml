@@ -22,7 +22,6 @@
     <string name="label_review_base" translatable="false">\"%1$s\"</string>
 
     <!--Preference-->
-    <!--Menu-->
     <string name="pref_sort_key" translatable="false">movie_sort</string>
     <string name="pref_sort_title">Sort By</string>
     <string name="pref_sort_popularity_entry">Popularity</string>
@@ -30,4 +29,11 @@
     <string name="pref_sort_popularity_value" translatable="false">0</string>
     <string name="pref_sort_rating_value" translatable="false">1</string>
 
+    <!--Menu-->
+    <string name="menu_favorite">Show Favorites</string>
+    <string name="menu_settings">Settings</string>
+
+    <!--Content Description-->
+    <string name="add_to_favorite">Add to your favorite list</string>
+    <string name="content_authority" translatable="false">com.meetferrytan.popularmovies</string>
 </resources>

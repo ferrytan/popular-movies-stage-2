@@ -28,6 +28,18 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentRight="true"/>
 
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_gravity="bottom|end"
+            android:layout_below="@id/txv_title"
+            android:layout_marginTop="-36dp"
+            android:layout_marginRight="16dp"
+            android:layout_alignParentRight="true"
+            android:src="@drawable/ic_favorite_add_remove" />
+
         <ImageView
             android:id="@+id/image"
             android:layout_width="120dp"

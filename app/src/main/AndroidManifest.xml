@@ -25,7 +25,11 @@
         <activity
             android:name=".presentation.moviedetail.MovieDetailActivity"
             android:label="@string/title_activity_movie_detail"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+            android:parentActivityName=".presentation.moviediscovery.MovieDiscoveryActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".presentation.moviediscovery.MovieDiscoveryActivity"/>
         </activity>
         <activity
             android:name=".presentation.settings.SettingsActivity"
@@ -35,6 +39,12 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".presentation.moviediscovery.MovieDiscoveryActivity"/>
         </activity>
+
+        <provider
+            android:name=".data.local.MovieProvider"
+            android:authorities="@string/content_authority"
+            android:exported="false"/>
+
     </application>
 
 </manifest>

@@ -1,9 +1,11 @@
 package com.meetferrytan.popularmovies.presentation.moviedetail;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,11 +22,13 @@ import com.meetferrytan.popularmovies.data.component.DaggerActivityInjectorCompo
 import com.meetferrytan.popularmovies.data.entity.Movie;
 import com.meetferrytan.popularmovies.data.entity.Review;
 import com.meetferrytan.popularmovies.data.entity.Trailer;
+import com.meetferrytan.popularmovies.data.local.MovieDbContract;
 import com.meetferrytan.popularmovies.presentation.base.BaseFragment;
 
 import java.util.List;
 
 import butterknife.BindView;
+import butterknife.OnClick;
 
 public class MovieDetailFragment extends BaseFragment<MovieDetailPresenter>
         implements MovieDetailContract.View {
@@ -45,8 +49,11 @@ public class MovieDetailFragment extends BaseFragment<MovieDetailPresenter>
     RecyclerView rvTrailers;
     @BindView(R.id.rv_reviews)
     RecyclerView rvReviews;
+    @BindView(R.id.fab)
+    FloatingActionButton fab;
 
     private Movie mMovie;
+    private boolean isFavorited;
 
     public static MovieDetailFragment newInstance(Movie movie) {
 
@@ -138,5 +145,30 @@ public class MovieDetailFragment extends BaseFragment<MovieDetailPresenter>
     public void updateMovieData(Movie movie) {
         mMovie = movie;
         getPresenter().distributeMovieDetail(mMovie);
+    }
+
+    @OnClick(R.id.fab)
+    public void onViewClicked() {
+
+        if(isFavorited){
+
+        }else {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(MovieDbContract.MovieEntry.COLUMN_ID, mMovie.getId());
+            contentValues.put(MovieDbContract.MovieEntry.COLUMN_TITLE, mMovie.getTitle());
+            contentValues.put(MovieDbContract.MovieEntry.COLUMN_POSTER_PATH, mMovie.getPosterImagePath());
+            contentValues.put(MovieDbContract.MovieEntry.COLUMN_OVERVIEW, mMovie.getSynopsys());
+            contentValues.put(MovieDbContract.MovieEntry.COLUMN_VOTE_AVERAGE, mMovie.getRating());
+            contentValues.put(MovieDbContract.MovieEntry.COLUMN_RELEASE_DATE, mMovie.getReleaseDate());
+            Uri insertUri = getActivity().getContentResolver().insert(MovieDbContract.MovieEntry.CONTENT_URI, contentValues);
+
+            if (insertUri == null) {
+                return;
+            }
+            Toast.makeText(getActivity(), insertUri.toString(), Toast.LENGTH_SHORT).show();
+        }
+
+        isFavorited = !isFavorited;
+        fab.setActivated(isFavorited);
     }
 }
