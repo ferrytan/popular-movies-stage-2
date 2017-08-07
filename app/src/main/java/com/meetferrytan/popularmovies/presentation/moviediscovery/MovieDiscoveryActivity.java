@@ -4,9 +4,14 @@ import android.app.ActivityOptions;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Parcelable;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.AsyncTaskLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -22,6 +27,7 @@ import com.meetferrytan.popularmovies.PopularMoviesApp;
 import com.meetferrytan.popularmovies.R;
 import com.meetferrytan.popularmovies.data.component.DaggerActivityInjectorComponent;
 import com.meetferrytan.popularmovies.data.entity.Movie;
+import com.meetferrytan.popularmovies.data.local.MovieDbContract;
 import com.meetferrytan.popularmovies.presentation.base.BaseActivity;
 import com.meetferrytan.popularmovies.presentation.moviedetail.MovieDetailActivity;
 import com.meetferrytan.popularmovies.presentation.moviedetail.MovieDetailFragment;
@@ -37,7 +43,11 @@ import butterknife.BindView;
 import butterknife.OnClick;
 
 public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter>
-        implements MovieDiscoveryContract.View, SharedPreferences.OnSharedPreferenceChangeListener {
+        implements MovieDiscoveryContract.View,
+        SharedPreferences.OnSharedPreferenceChangeListener,
+        MovieDetailFragment.DetailFragmentListener,
+        LoaderManager.LoaderCallbacks<Cursor>,
+        MovieAdapter.MovieItemClickListener {
 
     public static final String FRAGMENT_TAG_DETAIL = "detail_fragment";
     public static final int SORT_RATING = 0;
@@ -45,9 +55,13 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
     public static final int SPAN_COUNT_PORTRAIT = 2;
     public static final int SPAN_COUNT_LANDSCAPE = 4;
 
+    public static final int FAVORITE_LOADER_ID = 0;
+
     public static final String OUTSTATE_LIST_STATE = "list_state";
     public static final String OUTSTATE_MOVIES_LIST = "movies_list";
     public static final String OUTSTATE_HAS_MORE_DATA = "has_more";
+    public static final String OUTSTATE_SHOW_FAVORITE = "show_favorite";
+    public static final String OUTSTATE_SELECTED_ITEM = "selected_item";
 
     @BindView(R.id.recyclerview)
     RecyclerView recyclerview;
@@ -63,6 +77,9 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
     private boolean showFavorite;
 
     private MovieAdapter mMovieAdapter;
+    private int savedSelectedIndex;
+
+    private Handler mTransactionHandler;
 
     @Inject
     SharedPreferences mSharedPreferences;
@@ -83,8 +100,7 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
     @Override
     public void startingUpActivity(Bundle savedInstanceState) {
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle(R.string.title_activity_movie_discovery);
-
+        mTransactionHandler = new Handler();
         isTwoPane = getResources().getBoolean(R.bool.two_pane);
 
         final int spanCount = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT || isTwoPane ?
@@ -104,18 +120,32 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
         });
         recyclerview.setLayoutManager(gridLayoutManager);
 
-
         sortState = Integer.parseInt(mSharedPreferences.getString(getString(R.string.pref_sort_key), String.valueOf(sortState)));
         if (savedInstanceState == null) {
             loadData();
         } else {
-            boolean hasMoreData = savedInstanceState.getBoolean(OUTSTATE_HAS_MORE_DATA);
-            ArrayList<Movie> movies = savedInstanceState.getParcelableArrayList(OUTSTATE_MOVIES_LIST);
-
-            showResult(movies, hasMoreData);
+            showFavorite = savedInstanceState.getBoolean(OUTSTATE_SHOW_FAVORITE);
+            savedSelectedIndex = savedInstanceState.getInt(OUTSTATE_SELECTED_ITEM);
+            if (showFavorite) {
+                getSupportActionBar().setTitle(getString(R.string.title_activity_movie_discovery) + " - " + getString(R.string.title_favorite));
+                reloadFavoriteData();
+            } else {
+                getSupportActionBar().setTitle(getString(R.string.title_activity_movie_discovery) + " - " + getString(R.string.pref_sort_title) + " " + getString(sortState == SORT_RATING ? R.string.pref_sort_rating_entry : R.string.pref_sort_popularity_entry));
+                boolean hasMoreData = savedInstanceState.getBoolean(OUTSTATE_HAS_MORE_DATA);
+                ArrayList<Movie> movies = savedInstanceState.getParcelableArrayList(OUTSTATE_MOVIES_LIST);
+                showResult(movies, hasMoreData);
+            }
             recyclerview.getLayoutManager().onRestoreInstanceState(savedInstanceState.getParcelable(OUTSTATE_LIST_STATE));
         }
         mSharedPreferences.registerOnSharedPreferenceChangeListener(this);
+        getSupportLoaderManager().initLoader(FAVORITE_LOADER_ID, null, this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (showFavorite)
+            reloadFavoriteData();
     }
 
     /**
@@ -154,34 +184,13 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
     @Override
     public void showResult(List<Movie> movies, boolean hasMoreData) {
         if (mMovieAdapter == null) {
-            mMovieAdapter = new MovieAdapter(this, new ArrayList<>(movies), new MovieAdapter.ItemClickListener() {
-                @Override
-                public void onItemClick(View view, Movie movie) {
-                    Intent intent = new Intent(MovieDiscoveryActivity.this, MovieDetailActivity.class);
-                    intent.putExtra(AppConstants.BUNDLE_MOVIE, movie);
-                    if (isTwoPane) {
-                        showDetail(movie);
-                    } else {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                            ActivityOptions options = ActivityOptions.
-                                    makeSceneTransitionAnimation(MovieDiscoveryActivity.this, view, getString(R.string.activity_image_trans));
-                            startActivity(intent, options.toBundle());
-                        } else {
-                            startActivity(intent);
-                        }
-                    }
-                }
-
-                @Override
-                public void onLoadMoreDataClick() {
-                    loadData();
-                }
-            });
+            mMovieAdapter = new MovieAdapter(this, new ArrayList<>(movies), this);
+            mMovieAdapter.setSelectedItemIndex(savedSelectedIndex);
             recyclerview.setAdapter(mMovieAdapter);
 
             if (isTwoPane) {
                 // load first item on the list to the detail pane
-                showDetail(mMovieAdapter.getItem(0));
+                showDetail(mMovieAdapter.getSelectedItem());
             }
         } else {
             mMovieAdapter.addItems(movies);
@@ -189,11 +198,11 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
         mMovieAdapter.setLoadMoreEnabled(hasMoreData);
     }
 
-    private void addDetailFragment(Movie movie) {
+    private void addDetailFragment(final Movie movie) {
         MovieDetailFragment movieDetailFragment = MovieDetailFragment.newInstance(movie);
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, movieDetailFragment, FRAGMENT_TAG_DETAIL)
-                .commit();
+                .commitAllowingStateLoss();
     }
 
     private void showDetail(Movie movie) {
@@ -221,9 +230,8 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
     public boolean onPrepareOptionsMenu(Menu menu) {
         MenuItem menuFavorite = menu.getItem(0);
         menuFavorite.setChecked(showFavorite);
-        menuFavorite.setIcon(showFavorite?R.drawable.ic_favorite_enabled:R.drawable.ic_favorite_disabled);
+        menuFavorite.setIcon(showFavorite ? R.drawable.ic_favorite_enabled : R.drawable.ic_favorite_disabled);
         return super.onPrepareOptionsMenu(menu);
-
     }
 
     @Override
@@ -236,6 +244,19 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
                 return true;
             case R.id.favorite:
                 showFavorite = !showFavorite;
+                savedSelectedIndex = 0; // reset selected index on toggling favorite view
+                if (showFavorite) {
+                    getSupportActionBar().setTitle(getString(R.string.title_activity_movie_discovery) + " - " + getString(R.string.title_favorite));
+                    reloadFavoriteData();
+                } else {
+                    if (mMovieAdapter == null) {
+                        loadData();
+                    } else {
+                        getSupportActionBar().setTitle(getString(R.string.title_activity_movie_discovery) + " - " + getString(R.string.pref_sort_title) + " " + getString(sortState == SORT_RATING ? R.string.pref_sort_rating_entry : R.string.pref_sort_popularity_entry));
+                        recyclerview.setAdapter(mMovieAdapter);
+                        if (isTwoPane) showDetail(mMovieAdapter.getSelectedItem());
+                    }
+                }
                 invalidateOptionsMenu();
                 return true;
         }
@@ -251,6 +272,8 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
             outState.putParcelableArrayList(OUTSTATE_MOVIES_LIST, mMovieAdapter.getItems());
             outState.putBoolean(OUTSTATE_HAS_MORE_DATA, mMovieAdapter.isLoadMoreEnabled());
         }
+        outState.putBoolean(OUTSTATE_SHOW_FAVORITE, showFavorite);
+        outState.putInt(OUTSTATE_SELECTED_ITEM, savedSelectedIndex);
     }
 
     @OnClick(R.id.txv_error)
@@ -262,11 +285,17 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
         switch (sortState) {
             case SORT_RATING:
                 getPresenter().loadTopRatedMovies();
+                getSupportActionBar().setTitle(getString(R.string.title_activity_movie_discovery) + " - " + getString(R.string.pref_sort_title) + " " + getString(R.string.pref_sort_rating_entry));
                 break;
             case SORT_POPULARITY:
                 getPresenter().loadPopularMovies();
+                getSupportActionBar().setTitle(getString(R.string.title_activity_movie_discovery) + " - " + getString(R.string.pref_sort_title) + " " + getString(R.string.pref_sort_popularity_entry));
                 break;
         }
+    }
+
+    public void reloadFavoriteData() {
+        getSupportLoaderManager().restartLoader(FAVORITE_LOADER_ID, null, this);
     }
 
     @Override
@@ -276,9 +305,12 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
             if (newSortState != sortState) {
                 sortState = newSortState;
                 mMovieAdapter = null;
-                recyclerview.setAdapter(null);
                 getPresenter().reset();
-                loadData();
+
+                if (!showFavorite) {
+                    recyclerview.setAdapter(null);
+                    loadData();
+                }
             }
         }
     }
@@ -289,6 +321,121 @@ public class MovieDiscoveryActivity extends BaseActivity<MovieDiscoveryPresenter
         mSharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
     }
 
+    @Override
+    public void onFavoriteModified() {
+        if (showFavorite)
+            reloadFavoriteData();
+    }
 
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        return new AsyncTaskLoader<Cursor>(this) {
+
+            // Initialize a Cursor, this will hold all the task data
+            Cursor mTaskData = null;
+
+            // onStartLoading() is called when a loader first starts loading data
+            @Override
+            protected void onStartLoading() {
+                if (mTaskData != null) {
+                    // Delivers any previously loaded data immediately
+                    deliverResult(mTaskData);
+                } else {
+                    // Force a new load
+                    forceLoad();
+                }
+            }
+
+            // loadInBackground() performs asynchronous loading of data
+            @Override
+            public Cursor loadInBackground() {
+                // Will implement to load data
+
+                // Query and load all task data in the background; sort by priority
+                // [Hint] use a try/catch block to catch any errors in loading data
+
+                try {
+                    return getContentResolver().query(MovieDbContract.MovieEntry.CONTENT_URI,
+                            null,
+                            null,
+                            null,
+                            null);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+
+            // deliverResult sends the result of the load, a Cursor, to the registered listener
+            public void deliverResult(Cursor data) {
+                mTaskData = data;
+                super.deliverResult(data);
+            }
+        };
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        if (showFavorite) {
+            int indexId = data.getColumnIndex(MovieDbContract.MovieEntry.COLUMN_ID);
+            int IndexTitle = data.getColumnIndex(MovieDbContract.MovieEntry.COLUMN_TITLE);
+            int indexPosterPath = data.getColumnIndex(MovieDbContract.MovieEntry.COLUMN_POSTER_PATH);
+            int indexOverview = data.getColumnIndex(MovieDbContract.MovieEntry.COLUMN_OVERVIEW);
+            int indexVoteAverage = data.getColumnIndex(MovieDbContract.MovieEntry.COLUMN_VOTE_AVERAGE);
+            int indexReleaseDate = data.getColumnIndex(MovieDbContract.MovieEntry.COLUMN_RELEASE_DATE);
+
+            ArrayList<Movie> favoriteMovies = new ArrayList<>();
+            try {
+                while (data.moveToNext()) {
+                    Movie movie = new Movie();
+                    movie.setId(data.getString(indexId));
+                    movie.setTitle(data.getString(IndexTitle));
+                    movie.setPosterImagePath(data.getString(indexPosterPath));
+                    movie.setSynopsys(data.getString(indexOverview));
+                    movie.setRating(data.getDouble(indexVoteAverage));
+                    movie.setReleaseDate(data.getString(indexReleaseDate));
+
+                    favoriteMovies.add(movie);
+                }
+            } finally {
+                data.close();
+            }
+            MovieAdapter favoriteAdapter = new MovieAdapter(this, favoriteMovies, this);
+            favoriteAdapter.setSelectedItemIndex(savedSelectedIndex);
+            favoriteAdapter.setShowLoadMoreView(false);
+            recyclerview.setAdapter(favoriteAdapter);
+            if (isTwoPane) showDetail(favoriteAdapter.getSelectedItem());
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+
+    }
+
+    @Override
+    public void onMovieItemClick(View view, int position, Movie movie) {
+        if (isTwoPane) {
+            if (savedSelectedIndex != position) {
+                savedSelectedIndex = position;
+                showDetail(movie);
+            }
+        } else {
+            Intent intent = new Intent(MovieDiscoveryActivity.this, MovieDetailActivity.class);
+            intent.putExtra(AppConstants.BUNDLE_MOVIE, movie);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                ActivityOptions options = ActivityOptions.
+                        makeSceneTransitionAnimation(MovieDiscoveryActivity.this, view, getString(R.string.activity_image_trans));
+                startActivity(intent, options.toBundle());
+            } else {
+                startActivity(intent);
+            }
+        }
+    }
+
+    @Override
+    public void onLoadMoreDataClick() {
+        loadData();
+    }
 }
-

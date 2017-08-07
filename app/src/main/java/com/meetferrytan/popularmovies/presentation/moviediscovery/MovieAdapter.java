@@ -31,10 +31,12 @@ public class MovieAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     public static final int VIEWTYPE_LOAD_MORE = 1;
     private Context mContext;
     private ArrayList<Movie> mData;
-    private ItemClickListener mListener;
+    private MovieItemClickListener mListener;
+    private boolean showLoadMoreView = true;
     private boolean loadMoreEnabled;
+    private int selectedItemIndex;
 
-    public MovieAdapter(@NonNull Context context, @NonNull ArrayList<Movie> data, @NonNull ItemClickListener listener) {
+    public MovieAdapter(@NonNull Context context, @NonNull ArrayList<Movie> data, @NonNull MovieItemClickListener listener) {
         this.mContext = context;
         this.mData = data;
         this.mListener = listener;
@@ -47,6 +49,18 @@ public class MovieAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     public void setLoadMoreEnabled(boolean loadMoreEnabled) {
         this.loadMoreEnabled = loadMoreEnabled;
+    }
+
+    public void setShowLoadMoreView(boolean showLoadMoreView) {
+        this.showLoadMoreView = showLoadMoreView;
+    }
+
+    public void setSelectedItemIndex(int selectedItemIndex) {
+        this.selectedItemIndex = selectedItemIndex;
+    }
+
+    public int getSelectedItemIndex() {
+        return selectedItemIndex;
     }
 
     @Override
@@ -80,7 +94,7 @@ public class MovieAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     @Override
     public int getItemCount() {
-        return mData.size()+1;
+        return mData.size()+(showLoadMoreView?1:0);
     }
 
     @Override
@@ -104,13 +118,15 @@ public class MovieAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             Glide.with(mContext)
                     .load(movie.getPosterImageFullUrl())
                     .placeholder(R.drawable.placeholder)
+                    .dontAnimate()
                     .fitCenter()
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(mImgPoster);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    mListener.onItemClick(view, movie);
+                    selectedItemIndex = getAdapterPosition();
+                    mListener.onMovieItemClick(itemView, getAdapterPosition(), movie);
                 }
             });
         }
@@ -142,8 +158,8 @@ public class MovieAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         }
     }
 
-    public interface ItemClickListener{
-        void onItemClick(View view, Movie movie);
+    public interface MovieItemClickListener {
+        void onMovieItemClick(View view, int position, Movie movie);
         void onLoadMoreDataClick();
     }
 
@@ -160,5 +176,9 @@ public class MovieAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         if(position>=0 && position<mData.size())
             return mData.get(position);
         return null;
+    }
+
+    public Movie getSelectedItem(){
+        return mData.get(selectedItemIndex);
     }
 }
