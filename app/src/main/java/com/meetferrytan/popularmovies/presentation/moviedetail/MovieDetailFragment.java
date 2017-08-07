@@ -211,7 +211,7 @@ public class MovieDetailFragment extends BaseFragment<MovieDetailPresenter>
     @Override
     public void displayReviews(List<Review> reviews) {
         if(reviews.size() > 0) {
-            mReviewAdapter = new ReviewAdapter(getActivity(), reviews);
+            mReviewAdapter.setState(ErrorLoadingViewHolder.STATE_NORMAL);
             mReviewAdapter.updateData(reviews);
         }else{
             mReviewAdapter.setState(ErrorLoadingViewHolder.STATE_EMPTY);
