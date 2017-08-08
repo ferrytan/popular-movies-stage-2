@@ -15,12 +15,12 @@ Data comes from [themoviedb.org](https://themoviedb.org)
 - [RxJava](https://github.com/ReactiveX/RxJava)
 - [RxAndroid](https://github.com/ReactiveX/RxAndroid)
 - [Glide](https://github.com/bumptech/glide)
-- [Stetho] (http://facebook.github.io/stetho/)
+- [Stetho](http://facebook.github.io/stetho/)
 
 
 # Usage
 [Create your own TMDb API_KEY](https://developers.themoviedb.org/3/getting-started)
- to run this app and replace YOUR_API_KEY in util/AppConstants.TMDB_API_KEY
-
+ to run this app and put your api key in your machine's gradle.properties file
+ (see [here](https://technobells.com/best-way-to-store-your-api-keys-for-your-android-studio-project-e4b5e8bb7d23) for more info
 # Author
  Ferry Tan

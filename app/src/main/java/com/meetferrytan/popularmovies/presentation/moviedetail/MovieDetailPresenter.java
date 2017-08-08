@@ -1,5 +1,6 @@
 package com.meetferrytan.popularmovies.presentation.moviedetail;
 
+import com.meetferrytan.popularmovies.BuildConfig;
 import com.meetferrytan.popularmovies.PopularMoviesApp;
 import com.meetferrytan.popularmovies.R;
 import com.meetferrytan.popularmovies.data.entity.Movie;
@@ -65,7 +66,7 @@ public class MovieDetailPresenter extends BasePresenter<MovieDetailContract.View
     @Override
     public void getTrailers(String movieId) {
         getView().showLoading(PROCESS_GET_TRAILERS, true);
-        Disposable disposable = mAPI.getMovieTrailers(movieId, AppConstants.TMDB_API_KEY)
+        Disposable disposable = mAPI.getMovieTrailers(movieId, BuildConfig.TMDB_API_KEY)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<ResponseCollection<Trailer>>() {
@@ -87,7 +88,7 @@ public class MovieDetailPresenter extends BasePresenter<MovieDetailContract.View
     public void getReviews(String movieId) {
 
         getView().showLoading(PROCESS_GET_REVIEWS, true);
-        Disposable disposable = mAPI.getMovieReviews(movieId, AppConstants.TMDB_API_KEY)
+        Disposable disposable = mAPI.getMovieReviews(movieId, BuildConfig.TMDB_API_KEY)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<ResponseCollection<Review>>() {

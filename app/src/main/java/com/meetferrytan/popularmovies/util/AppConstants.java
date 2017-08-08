@@ -5,9 +5,6 @@ package com.meetferrytan.popularmovies.util;
  */
 
 public class AppConstants {
-    // Create your own TMDb API KEY
-    // https://developers.themoviedb.org/3/getting-started
-    public static final String TMDB_API_KEY = "YOUR_API_KEY";
     public static final String BASE_URL = "https://api.themoviedb.org/3/";
 
     public static final String JSON_KEY_STATUS_CODE = "status_code";

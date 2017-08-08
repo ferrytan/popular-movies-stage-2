@@ -1,10 +1,10 @@
 package com.meetferrytan.popularmovies.presentation.moviediscovery;
 
+import com.meetferrytan.popularmovies.BuildConfig;
 import com.meetferrytan.popularmovies.data.entity.Movie;
 import com.meetferrytan.popularmovies.presentation.base.BasePresenter;
 import com.meetferrytan.popularmovies.presentation.moviediscovery.repository.MovieDiscoveryAPI;
 import com.meetferrytan.popularmovies.rest.ResponseCollection;
-import com.meetferrytan.popularmovies.util.AppConstants;
 
 import javax.inject.Inject;
 
@@ -32,7 +32,7 @@ public class MovieDiscoveryPresenter extends BasePresenter<MovieDiscoveryContrac
         getView().showLoading(PROCESS_LOAD_POPULAR_MOVIES, true);
         mPage++;
 
-        Disposable disposable = mAPI.getPopularMovies(AppConstants.TMDB_API_KEY, mPage)
+        Disposable disposable = mAPI.getPopularMovies(BuildConfig.TMDB_API_KEY, mPage)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<ResponseCollection<Movie>>() {
@@ -55,7 +55,7 @@ public class MovieDiscoveryPresenter extends BasePresenter<MovieDiscoveryContrac
     public void loadTopRatedMovies() {
         getView().showLoading(PROCESS_LOAD_TOP_RATED_MOVIES, true);
         mPage++;
-        Disposable disposable = mAPI.getTopRatedMovies(AppConstants.TMDB_API_KEY, mPage)
+        Disposable disposable = mAPI.getTopRatedMovies(BuildConfig.TMDB_API_KEY, mPage)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<ResponseCollection<Movie>>() {
