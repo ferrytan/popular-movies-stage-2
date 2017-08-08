@@ -15,7 +15,6 @@ import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -114,11 +113,9 @@ public class MovieDetailFragment extends BaseFragment<MovieDetailPresenter>
                 startActivity(i);
             }
         });
-        mTrailerAdapter.setState(ErrorLoadingViewHolder.STATE_LOADING);
         rvTrailers.setAdapter(mTrailerAdapter);
 
         mReviewAdapter = new ReviewAdapter(getActivity(), new ArrayList<Review>());
-        mReviewAdapter.setState(ErrorLoadingViewHolder.STATE_LOADING);
         rvReviews.setAdapter(mReviewAdapter);
 
         updateMovieData(mMovie);
@@ -201,7 +198,6 @@ public class MovieDetailFragment extends BaseFragment<MovieDetailPresenter>
     @Override
     public void displayTrailers(List<Trailer> trailers) {
         if (trailers.size() > 0) {
-            mTrailerAdapter.setState(ErrorLoadingViewHolder.STATE_NORMAL);
             mTrailerAdapter.updateData(trailers);
         } else {
             mTrailerAdapter.setState(ErrorLoadingViewHolder.STATE_EMPTY);
@@ -211,7 +207,6 @@ public class MovieDetailFragment extends BaseFragment<MovieDetailPresenter>
     @Override
     public void displayReviews(List<Review> reviews) {
         if(reviews.size() > 0) {
-            mReviewAdapter.setState(ErrorLoadingViewHolder.STATE_NORMAL);
             mReviewAdapter.updateData(reviews);
         }else{
             mReviewAdapter.setState(ErrorLoadingViewHolder.STATE_EMPTY);
@@ -302,8 +297,6 @@ public class MovieDetailFragment extends BaseFragment<MovieDetailPresenter>
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         try {
             boolean favorited = data.moveToFirst();
-            Log.d("test", "favorited: " + isFavorited);
-//            Log.d("test", "onLoadFinished: " + data.getString(data.getColumnIndex(MovieDbContract.MovieEntry.COLUMN_TITLE)) + " favorited: " + isFavorited);
             updateFavoriteFab(favorited);
         } finally {
             data.close();

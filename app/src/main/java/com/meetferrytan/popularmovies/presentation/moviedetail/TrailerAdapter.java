@@ -49,7 +49,7 @@ public class TrailerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        switch (viewType){
+        switch (viewType) {
             case TYPE_DATA:
                 View dataView = LayoutInflater.from(mContext).inflate(R.layout.item_trailer, parent, false);
                 return new TrailerViewHolder(dataView);
@@ -63,13 +63,13 @@ public class TrailerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         int viewType = getItemViewType(position);
-        switch (viewType){
+        switch (viewType) {
             case TYPE_DATA:
-                ((TrailerViewHolder)holder).bindView(mData.get(position));
+                ((TrailerViewHolder) holder).bindView(mData.get(position));
                 break;
             case TYPE_OTHER:
                 String message = "";
-                switch (mState){
+                switch (mState) {
                     case ErrorLoadingViewHolder.STATE_ERROR:
                         message = mContext.getString(R.string.trailer_load_error);
                         break;
@@ -77,25 +77,25 @@ public class TrailerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                         message = mContext.getString(R.string.trailer_empty);
                         break;
                 }
-                ((ErrorLoadingViewHolder)holder).bindView(mState, message);
+                ((ErrorLoadingViewHolder) holder).bindView(mState, message);
                 break;
         }
     }
 
     @Override
     public int getItemCount() {
-        return mData.size() + mState>ErrorLoadingViewHolder.STATE_NORMAL?1:0;
+        return mData.size() + (mState > ErrorLoadingViewHolder.STATE_NORMAL ? 1 : 0);
     }
 
     @Override
     public int getItemViewType(int position) {
-        if(mState> ErrorLoadingViewHolder.STATE_NORMAL){
+        if (mState > ErrorLoadingViewHolder.STATE_NORMAL) {
             return TYPE_OTHER;
         }
         return TYPE_DATA;
     }
 
-    public class TrailerViewHolder extends RecyclerView.ViewHolder{
+    public class TrailerViewHolder extends RecyclerView.ViewHolder {
 
         @BindView(R.id.image)
         ImageView mImgThumbnail;
@@ -105,8 +105,7 @@ public class TrailerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             ButterKnife.bind(this, itemView);
         }
 
-        void bindView(final Trailer trailer){
-
+        void bindView(final Trailer trailer) {
             Glide.with(mContext)
                     .load(trailer.getYoutubeThumbnailUrl())
                     .placeholder(R.drawable.placeholder)
@@ -122,12 +121,13 @@ public class TrailerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
     }
 
-    public void updateData(List<Trailer> newData){
+    public void updateData(List<Trailer> newData) {
+        mState = ErrorLoadingViewHolder.STATE_NORMAL;
         mData = newData;
         notifyDataSetChanged();
     }
 
-    public interface TrailerClickListener{
+    public interface TrailerClickListener {
         void onTrailerItemClicked(View view, Trailer trailer);
     }
 }

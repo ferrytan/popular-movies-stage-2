@@ -88,10 +88,11 @@ public class ReviewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
     @Override
     public int getItemCount() {
-        return mData.size() + mState>ErrorLoadingViewHolder.STATE_NORMAL?1:0;
+        return mData.size() + (mState>ErrorLoadingViewHolder.STATE_NORMAL?1:0);
     }
 
     public void updateData(List<Review> newData){
+        mState = ErrorLoadingViewHolder.STATE_NORMAL;
         mData = newData;
         notifyDataSetChanged();
     }
